@@ -19,21 +19,12 @@ int wolfram_graphs()
     std::vector<std::vector<int>> frame;
     std::vector<int> average;
     // frame.reserve(rows);
-    for (int i = 0; i < rows; i++)
-    {
-        std::vector<int> slice;
 
-        int average_sum = 0;
-        for (int j = 0; j < columns; j++)
-        {
-            int value;
-            f >> value;
-            if (value == 1)
-                average_sum++;
-            slice.push_back(value);
-            average.push_back(average_sum);
-        }
-        frame.push_back(slice);
+    while (!f.eof())
+    {
+        int value;
+        f >> value;
+        average.push_back(value);
     }
 
     auto graph = new TGraph(rows);
@@ -42,12 +33,12 @@ int wolfram_graphs()
     graph->SetMarkerStyle(21);
     graph->SetDrawOption("LP");
     graph->SetLineColor(4);
-    graph->SetLineWidth(4);
+    graph->SetLineWidth(1);
     graph->SetFillStyle(0);
 
     for (int i = 0; i < average.size(); i++)
     {
-        graph->SetPoint(i, average[i], i);
+        graph->SetPoint(i, i, average[i]);
     }
 
     auto c = new TCanvas("average", "average", rows, columns, 1080, 720);
