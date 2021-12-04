@@ -25,6 +25,7 @@ struct PRFileFormat
     std::string y_axis_name;
     std::string graph_label;
 };
+
 std::string PRFileFormat::directory_path = DIRECTORY_PATH;
 /// populates output with sub-directories for directory
 /// only increment files will be recognized
@@ -43,6 +44,8 @@ void pr_loader()
     std::vector<std::string> output;
 
     ReadDirectory(DIRECTORY_PATH, output);
+    for (auto o : output)
+        std::cout << o;
 
     for (auto o : output)
         DrawGraph(PRFileFormat(o));
@@ -62,7 +65,7 @@ void ReadDirectory(const std::string &directory,
 
         if (!f.good())
         {
-            std::cout << "not existing file path: " << full_path << std::endl;
+            // std::cout << "not existing file path: " << full_path << std::endl;
             f.close();
             return;
         }
@@ -73,10 +76,11 @@ void ReadDirectory(const std::string &directory,
     }
 }
 
-int color_id = 3;
-
 void DrawGraph(const PRFileFormat &data)
 {
+
+    int color_id = 8;
+    int marker_id = 104;
 
     auto mg = new TMultiGraph(data.graph_label.c_str(), data.graph_label.c_str());
     mg->SetTitle(std::string(data.graph_label + ';' + data.x_axis_name + ';' + data.y_axis_name).c_str());
@@ -86,16 +90,18 @@ void DrawGraph(const PRFileFormat &data)
         auto graph = (new TGraph());
         graph->SetName(data.datasets_labels[label_id].c_str());
         graph->SetTitle(data.datasets_labels[label_id].c_str());
-        graph->SetMarkerStyle(22);
+        graph->SetMarkerStyle(marker_id++);
+        graph->SetMarkerSize(2);
         graph->SetDrawOption("LP");
         graph->SetLineColor(color_id++);
-        graph->SetLineWidth(4);
-        graph->SetFillStyle(0);
+        graph->SetLineWidth(1);
+        graph->SetFillStyle(2);
 
         for (int i = 0; i < data.arguments.size(); i++)
         {
             graph->SetPoint(i, (double)data.arguments[i], data.values[i][label_id]);
         }
+
         mg->Add(graph, "PL");
     }
 
@@ -103,10 +109,19 @@ void DrawGraph(const PRFileFormat &data)
     mg->Draw("A pmc plc");
     c->BuildLegend();
 
-    auto out_file = new TFile(std::string("C:\\Users\\piotr\\Documents\\CoA\\testing\\pr_directory\\" + data.graph_label + ".root").c_str(), "RECREATE");
+    // c->Draw();
+
+    auto imgdump = new TImageDump(std::string("C:\\Users\\piotr\\Documents\\CoA\\testing\\pr_directory\\" + data.graph_label + ".png").c_str());
+    c->Paint();
+
+    imgdump->Close();
+
+    // c->Print(std::string("C:\\Users\\piotr\\Documents\\CoA\\testing\\pr_directory\\" + data.graph_label + ".pdf()").c_str(), data.graph_label.c_str());
+
+    // auto out_file = new TFile(std::string("C:\\Users\\piotr\\Documents\\CoA\\testing\\pr_directory\\" + data.graph_label + ".root").c_str(), "RECREATE");
 
     // Write the histogram in the file
-    mg->Write();
+    // mg->Write();
 }
 
 void AddSpace(std::string &text)
@@ -128,26 +143,28 @@ void PRFileFormat::Load(std::string path)
         throw "bad file path";
     }
     std::getline(f, graph_label);
+    // AddSpace(graph_label);
 
-    AddSpace(graph_label);
     std::getline(f, x_axis_name);
-    AddSpace(x_axis_name);
+    // AddSpace(x_axis_name);
+
     std::getline(f, y_axis_name);
-    AddSpace(y_axis_name);
+    // AddSpace(y_axis_name);
 
     int datasets_count;
     f >> datasets_count;
 
     int values_count;
     f >> values_count;
+
     std::string label;
-    std::getline(f, label, '\t');
+    std::getline(f, label);
 
     for (int i = 0; i < datasets_count; i++)
     {
-        std::getline(f, label, '\t');
-        AddSpace(label);
+        std::getline(f, label);
         datasets_labels.push_back(label);
+        std::cout << " label  " << i << "  " << label << "\n";
     }
 
     for (int i = 0; i < values_count; ++i)
